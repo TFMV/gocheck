@@ -250,10 +250,22 @@ if $DO_TEST; then
   # Clean up old profiles
   rm -f "$ARTIFACTS_DIR/coverage.out" "$ARTIFACTS_DIR/cpu.prof" "$ARTIFACTS_DIR/mem.prof" "$ARTIFACTS_DIR/block.prof" "$ARTIFACTS_DIR/mutex.prof"
   
+  # Check if we're testing multiple packages
+  IS_MULTIPLE_PACKAGES=false
+  if [[ "$FOCUS_PKG" == *"..."* ]]; then
+    IS_MULTIPLE_PACKAGES=true
+  fi
+  
   # Build test flags
   TEST_FLAGS="-race -timeout=$TIMEOUT -coverprofile=$ARTIFACTS_DIR/coverage.out"
-  TEST_FLAGS="$TEST_FLAGS -cpuprofile=$ARTIFACTS_DIR/cpu.prof -memprofile=$ARTIFACTS_DIR/mem.prof"
-  TEST_FLAGS="$TEST_FLAGS -blockprofile=$ARTIFACTS_DIR/block.prof -mutexprofile=$ARTIFACTS_DIR/mutex.prof"
+  
+  # Only add profiling flags when testing a single package
+  if ! $IS_MULTIPLE_PACKAGES; then
+    TEST_FLAGS="$TEST_FLAGS -cpuprofile=$ARTIFACTS_DIR/cpu.prof -memprofile=$ARTIFACTS_DIR/mem.prof"
+    TEST_FLAGS="$TEST_FLAGS -blockprofile=$ARTIFACTS_DIR/block.prof -mutexprofile=$ARTIFACTS_DIR/mutex.prof"
+  else
+    echo -e "${YELLOW}Note: Profiling disabled for multiple packages. Use --focus to specify a single package for profiling.${NC}"
+  fi
   
   # Add test pattern if specified
   if [ -n "$TEST_PATTERN" ]; then
